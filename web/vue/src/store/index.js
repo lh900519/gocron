@@ -6,9 +6,13 @@ vue.use(vuex)
 export default new vuex.Store({
   state: {
     hiddenNavMenu: false,
-    user: userStorage.get()
+    user: userStorage.get(),
+    searchParams: {}
   },
   getters: {
+    searchParams (state) {
+      return state.searchParams
+    },
     user (state) {
       return state.user
     },
@@ -17,6 +21,9 @@ export default new vuex.Store({
     }
   },
   mutations: {
+    setSearchParams (state, params) {
+      state.searchParams = params
+    },
     hiddenNavMenu (state) {
       state.hiddenNavMenu = true
     },

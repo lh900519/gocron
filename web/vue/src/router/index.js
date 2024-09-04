@@ -53,6 +53,7 @@ const router = new Router({
       name: 'task-list',
       component: TaskList,
       meta: {
+        keepAlive: true,
         noNeedAdmin: true
       }
     },

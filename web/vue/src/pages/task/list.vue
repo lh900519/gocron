@@ -1,20 +1,20 @@
 <template>
 <el-container>
   <task-sidebar></task-sidebar>
-  <el-main>
+  <el-main ref="scrollBarRef">
     <el-form :inline="true" >
       <el-row>
         <el-form-item label="任务ID">
-          <el-input v-model.trim="searchParams.id"></el-input>
+          <el-input v-model.trim="searchParams.id" @change="changeValue"></el-input>
         </el-form-item>
         <el-form-item label="任务名称">
-          <el-input v-model.trim="searchParams.name"></el-input>
+          <el-input v-model.trim="searchParams.name" @change="changeValue"></el-input>
         </el-form-item>
         <el-form-item label="任务命令">
-          <el-input v-model.trim="searchParams.command"></el-input>
+          <el-input v-model.trim="searchParams.command" @change="changeValue"></el-input>
         </el-form-item>
         <el-form-item label="标签">
-          <el-input v-model.trim="searchParams.tag"></el-input>
+          <el-input v-model.trim="searchParams.tag" @change="changeValue"></el-input>
         </el-form-item>
       </el-row>
       <el-row>
@@ -53,6 +53,7 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="el-icon-search" @click="search()">搜索</el-button>
+          <el-button @click="resetParams()">清空</el-button>
         </el-form-item>
       </el-row>
     </el-form>
@@ -173,7 +174,8 @@
       background
       layout="prev, pager, next, sizes, total"
       :total="taskTotal"
-      :page-size="20"
+      :page-size.sync="searchParams.page_size"
+      :current-page.sync="searchParams.page"
       @size-change="changePageSize"
       @current-change="changePage"
       @prev-click="changePage"
@@ -191,11 +193,9 @@ import taskService from '../../api/task'
 export default {
   name: 'task-list',
   data () {
-    return {
-      tasks: [],
-      hosts: [],
-      taskTotal: 0,
-      searchParams: {
+    var param = this.$store.getters.searchParams
+    if (JSON.stringify(param) === '{}') {
+      param = {
         page_size: 20,
         page: 1,
         id: '',
@@ -204,8 +204,15 @@ export default {
         tag: '',
         host_id: '',
         status: '',
-        command: ''
-      },
+        scrollTop: 0
+      }
+    }
+
+    return {
+      tasks: [],
+      hosts: [],
+      taskTotal: 0,
+      searchParams: param,
       isAdmin: this.$store.getters.user.isAdmin,
       protocolList: [
         {
@@ -238,6 +245,19 @@ export default {
 
     this.search()
   },
+  activated () {
+    // console.log('activated', this.searchParams.scrollTop)
+    this.refresh()
+    this.dom.scrollTop = this.searchParams.scrollTop
+  },
+  mounted () {
+    this.dom = this.$refs.scrollBarRef.$el
+
+    this.dom.addEventListener('scroll', () => {
+      // 滚动距离
+      this.searchParams.scrollTop = this.dom.scrollTop
+    })
+  },
   filters: {
     formatLevel (value) {
       if (value === 1) {
@@ -265,6 +285,9 @@ export default {
     }
   },
   methods: {
+    changeValue (value) {
+      this.search()
+    },
     changeStatus (item) {
       if (item.status) {
         taskService.enable(item.id)
@@ -289,7 +312,13 @@ export default {
       this.searchParams.page_size = pageSize
       this.search()
     },
+    resetParams () {
+      this.searchParams = {}
+      this.search()
+    },
     search (callback = null) {
+      this.$store.commit('setSearchParams', this.searchParams)
+
       taskService.list(this.searchParams, (tasks, hosts) => {
         this.tasks = tasks.data
         this.taskTotal = tasks.total

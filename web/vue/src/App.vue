@@ -1,17 +1,17 @@
 <template>
-  <el-container>
-    <el-header>
+  <el-container >
+    <el-header height="56px">
       <app-header></app-header>
       <app-nav-menu></app-nav-menu>
     </el-header>
     <el-main >
       <div id="main-container" v-cloak>
-        <router-view/>
+        <keep-alive >
+          <router-view v-if="$route.meta.keepAlive" />
+        </keep-alive>
+        <router-view v-if="!$route.meta.keepAlive" />
       </div>
     </el-main>
-    <el-footer>
-      <app-footer></app-footer>
-    </el-footer>
   </el-container>
 </template>
 
@@ -19,7 +19,6 @@
 import installService from './api/install'
 import appHeader from './components/common/header.vue'
 import appNavMenu from './components/common/navMenu.vue'
-import appFooter from './components/common/footer.vue'
 
 export default {
   name: 'App',
@@ -35,8 +34,7 @@ export default {
   },
   components: {
     appHeader,
-    appNavMenu,
-    appFooter
+    appNavMenu
   }
 }
 </script>
@@ -61,10 +59,14 @@ export default {
     margin:0;
   }
   #main-container .el-main {
-    height: calc(100vh - 116px);
-    margin:20px 20px 0 20px;
+    height: calc(100vh - 56px);
+    padding:20px 0 20px 20px;
   }
   .el-aside .el-menu {
     height: 100%;
+  }
+  .el-table {
+    width: 100%;
+    margin-top: 10px;
   }
 </style>
